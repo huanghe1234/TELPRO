@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans
+	xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+	http://www.springframework.org/schema/beans/spring-beans-3.1.xsd 
+	http://www.springframework.org/schema/context 
+	http://www.springframework.org/schema/context/spring-context.xsd
+	http://www.springframework.org/schema/aop
+	http://www.springframework.org/schema/aop/spring-aop.xsd
+	http://www.springframework.org/schema/tx
+	http://www.springframework.org/schema/tx/spring-tx.xsd
+	">
+	<!-- 扫描指定包下面的Spring的注解 -->
+	<context:component-scan base-package="com.tc25"></context:component-scan>
+	
+	<!-- 由spring创建connection对象 -->
+	<bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource" destroy-method="close">
+		<property name="driverClass" value="oracle.jdbc.driver.OracleDriver"></property>
+		<property name="jdbcUrl" value="jdbc:oracle:thin:@localhost:1521:XE"></property>
+		<property name="user" value="huanghe"></property>
+		<property name="password" value="123456"></property>
+	</bean>
+	
+	<!-- <bean class="org.springframework.jdbc.core.JdbcTemplate">
+		<constructor-arg ref="dataSource" />
+	</bean> -->
+	
+	<!-- 生成SessionFactory对象(引入dataSource的值) -->
+	<bean id="sessionFactory" class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
+		<property name="dataSource" ref="dataSource"></property>	
+		<!-- 配置hibernate基本属性 -->
+		<property name="hibernateProperties">
+			<props>                          
+				<prop key="hibernate.dialect">org.hibernate.dialect.Oracle10gDialect</prop>
+				<prop key="hibernate.hbm2ddl.auto">update</prop>
+				<prop key="hibernate.show_sql">true</prop>
+			</props>
+		</property>
+		<!-- 扫描指定包下面的hibernate注解 -->
+		<property name="packagesToScan">
+			<array>
+				<value>com.tc25.entity</value>
+			</array>
+		</property>
+	</bean>
+	
+	<!-- 生成HibernateTemplate对象(引入sessionFactory的值) -->
+	<bean class="org.springframework.orm.hibernate4.HibernateTemplate">
+		<constructor-arg ref="sessionFactory"></constructor-arg>
+	</bean>
+	
+	<!-- 配置平台事务管理器(引入sessionFactory的值) -->
+	 <bean id="transactionManager" class="org.springframework.orm.hibernate4.HibernateTransactionManager">
+		<property name="sessionFactory" ref="sessionFactory"></property>
+	</bean> 
+	
+	<!-- 配置事务托管 -->
+	 <tx:annotation-driven transaction-manager="transactionManager"/> 
+</beans>
